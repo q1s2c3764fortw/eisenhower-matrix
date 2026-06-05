@@ -85,8 +85,13 @@ input,textarea,select{font:inherit;color:inherit}
 .q-cards{display:flex;flex-direction:column;gap:var(--space-2);flex:1}
 .q-empty{display:flex;align-items:center;justify-content:center;flex:1;color:var(--color-text-faint);font-size:var(--text-xs);border:1.5px dashed var(--color-border);border-radius:var(--radius-md);min-height:64px}
 
-.task-card{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3);display:flex;align-items:flex-start;gap:var(--space-2);cursor:grab;user-select:none;transition:box-shadow var(--transition-interactive),transform var(--transition-interactive),opacity var(--transition-interactive)}
+.task-card{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3);display:flex;align-items:flex-start;gap:var(--space-2);cursor:pointer;user-select:none;transition:box-shadow var(--transition-interactive),transform var(--transition-interactive),opacity var(--transition-interactive)}
 .task-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+/* drag handle */
+.drag-handle{display:flex;align-items:center;padding:0 var(--space-1);color:var(--color-text-faint);cursor:grab;opacity:0;transition:opacity var(--transition-interactive);flex-shrink:0}
+.drag-handle:active{cursor:grabbing}
+.task-card:hover .drag-handle{opacity:1}
+
 .task-card:active{cursor:grabbing}
 .task-card.dragging{opacity:.4;transform:scale(.97)}
 .task-card.completed .task-text{text-decoration:line-through;color:var(--color-text-muted)}
@@ -467,10 +472,13 @@ function renderMatrix() {
 
 function createCard(task) {
   const div = document.createElement("div");
-  div.className = "task-card"; div.draggable = true; div.dataset.id = task.id;
+  div.className = "task-card"; div.dataset.id = task.id;
   const repeatBadge = task.repeat && task.repeat !== "none"
     ? `<span class="repeat-badge">↺ ${REPEAT_LABELS[task.repeat]}</span>` : "";
   div.innerHTML = `
+    <div class="drag-handle" draggable="true" aria-label="拖曳" title="拖曳移動">
+      <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="6" r="1.5"/><circle cx="7" cy="6" r="1.5"/><circle cx="3" cy="10" r="1.5"/><circle cx="7" cy="10" r="1.5"/><circle cx="3" cy="14" r="1.5"/><circle cx="7" cy="14" r="1.5"/></svg>
+    </div>
     <button class="task-check" data-action="check" aria-label="完成">
       <svg viewBox="0 0 12 12"><polyline points="1.5 6 4.5 9 10.5 3"/></svg>
     </button>
@@ -488,8 +496,9 @@ function createCard(task) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>`;
-  div.addEventListener("dragstart", onDragStart);
-  div.addEventListener("dragend", onDragEnd);
+  const handle = div.querySelector(".drag-handle");
+  handle.addEventListener("dragstart", onDragStart.bind(div));
+  handle.addEventListener("dragend", onDragEnd.bind(div));
   div.addEventListener("click", e => {
     const btn = e.target.closest("[data-action]");
     if (btn) {
