@@ -95,7 +95,7 @@ input,textarea,select{font:inherit;color:inherit}
 .task-check.checked{background:var(--color-primary);border-color:var(--color-primary)}
 .task-check.checked svg{display:block}
 .task-check svg{display:none;width:11px;height:11px;stroke:#fff;stroke-width:2.5;fill:none}
-.task-body{flex:1;min-width:0}
+.task-body{flex:1;min-width:0;cursor:pointer}
 .task-text{font-size:var(--text-sm);line-height:1.4;word-break:break-word}
 .task-meta{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-1);flex-wrap:wrap}
 .task-tag{font-size:10px;padding:1px 6px;border-radius:var(--radius-full);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
@@ -139,6 +139,10 @@ textarea.form-input{resize:vertical;min-height:72px}
 .repeat-opt{padding:var(--space-2) var(--space-1);border:2px solid var(--color-border);border-radius:var(--radius-md);cursor:pointer;font-size:10px;font-weight:600;text-align:center;transition:border-color var(--transition-interactive),background var(--transition-interactive)}
 .repeat-opt:hover{background:var(--color-surface-dynamic)}
 .repeat-opt.selected{border-color:var(--color-primary);background:var(--color-primary-highlight)}
+/* start date field */
+.start-date-row{display:none;margin-top:var(--space-3)}
+.start-date-row.visible{display:flex;flex-direction:column;gap:var(--space-2)}
+
 .modal-actions{display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-6)}
 .btn-ghost{padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;color:var(--color-text-muted)}
 .btn-ghost:hover{background:var(--color-surface-dynamic);color:var(--color-text)}
@@ -310,7 +314,11 @@ textarea.form-input{resize:vertical;min-height:72px}
         <div class="repeat-opt" data-repeat="daily">每日</div>
         <div class="repeat-opt" data-repeat="weekly">每週</div>
         <div class="repeat-opt" data-repeat="monthly">每月</div>
-      </div>
+
+    </div>
+    <div class="form-row start-date-row" id="start-date-row">
+      <div class="form-label">開始日期（選填）</div>
+      <input type="date" class="form-input" id="modal-start-date" placeholder="從哪天起開始生效">
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" id="modal-cancel">取消</button>
@@ -319,6 +327,34 @@ textarea.form-input{resize:vertical;min-height:72px}
   </div>
 </div>
 
+
+<!-- Edit Task Modal -->
+<div class="modal-backdrop" id="edit-modal" style="display:none" role="dialog" aria-modal="true" aria-label="編輯任務">
+  <div class="modal">
+    <div class="modal-title">編輯任務</div>
+    <div class="form-row">
+      <label class="form-label" for="edit-title-input">任務名稱</label>
+      <input class="form-input" id="edit-title-input" type="text" placeholder="任務名稱" maxlength="200">
+    </div>
+    <div class="form-row">
+      <label class="form-label" for="edit-note">備註（選填）</label>
+      <textarea class="form-input" id="edit-note" placeholder="備註（選填）" rows="3"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-label">放入象限</div>
+      <div class="q-select-grid" id="edit-q-grid">
+        <div class="q-option q1-opt" data-q="q1">🔴 立即執行<br><small>緊急 × 重要</small></div>
+        <div class="q-option q2-opt" data-q="q2">🟢 規劃執行<br><small>不緊急 × 重要</small></div>
+        <div class="q-option q3-opt" data-q="q3">🟠 委派他人<br><small>緊急 × 不重要</small></div>
+        <div class="q-option q4-opt" data-q="q4">⚪ 刪除或延後<br><small>不緊急 × 不重要</small></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="edit-modal-cancel">取消</button>
+      <button class="btn-primary" id="edit-modal-confirm">儲存</button>
+    </div>
+  </div>
+</div>
 <!-- Undo -->
 <div class="undo-banner" id="undo-banner" style="display:none" role="status">
   <span id="undo-msg"></span>
@@ -394,6 +430,12 @@ async function checkRepeatTasks() {
   for (const tmpl of templates) {
     const key = getPeriodKey(tmpl.repeat);
     if (!key) continue;
+    // check startDate: skip if today is before startDate
+    if (tmpl.startDate) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const sd = new Date(tmpl.startDate); sd.setHours(0,0,0,0);
+      if (today < sd) continue;
+    }
     const alreadyExists = tasks.some(t => t.templateId === tmpl.id && t.periodKey === key);
     if (!alreadyExists) {
       const id = Date.now() + Math.random();
@@ -450,9 +492,15 @@ function createCard(task) {
   div.addEventListener("dragend", onDragEnd);
   div.addEventListener("click", e => {
     const btn = e.target.closest("[data-action]");
-    if (!btn) return;
-    if (btn.dataset.action === "check") completeTask(task.id);
-    if (btn.dataset.action === "delete") deleteTask(task.id);
+    if (btn) {
+      if (btn.dataset.action === "check") completeTask(task.id);
+      if (btn.dataset.action === "delete") deleteTask(task.id);
+      return;
+    }
+    // click on task body => edit
+    if (e.target.closest(".task-body") || e.target.closest(".task-text")) {
+      openEditModal(task);
+    }
   });
   return div;
 }
@@ -510,6 +558,7 @@ function renderTemplates() {
         <div class="template-meta">
           <span class="task-tag tag-${tmpl.quadrant}">${LABELS[tmpl.quadrant]}</span>
           <span class="repeat-badge">↺ ${REPEAT_LABELS[tmpl.repeat]}</span>
+          ${tmpl.startDate ? `<span class="task-date">從 ${tmpl.startDate} 起</span>` : ""}
         </div>
       </div>
       <button class="template-action-btn" data-id="${tmpl.id}" title="刪除範本" aria-label="刪除範本">
@@ -521,12 +570,12 @@ function renderTemplates() {
 }
 
 // ——— ACTIONS ———
-async function addTask(title, note, quadrant, repeat) {
+async function addTask(title, note, quadrant, repeat, startDate) {
   if (!title.trim() || !quadrant) return;
   const id = Date.now();
   // if repeat, save template
   if (repeat && repeat !== "none") {
-    await fsSet(currentUser.uid, "templates", id, { id, title: title.trim(), note: note||"", quadrant, repeat });
+    await fsSet(currentUser.uid, "templates", id, { id, title: title.trim(), note: note||"", quadrant, repeat, startDate: startDate||"" });
     // also create first instance now
     const key = getPeriodKey(repeat);
     await fsSet(currentUser.uid, "tasks", id, { id, title: title.trim(), note: note||"", quadrant, created: dateStr(), templateId: id, periodKey: key, repeat });
@@ -561,6 +610,46 @@ async function restoreTask(id) {
 async function permDeleteTask(id) { await fsDel(currentUser.uid, "completed", id); }
 async function deleteTemplate(id) { await fsDel(currentUser.uid, "templates", id); }
 
+
+// ——— EDIT MODAL ———
+let editingTaskId = null, editSelectedQ = null;
+const editModal = document.getElementById("edit-modal");
+const editInput = document.getElementById("edit-title-input");
+const editNote = document.getElementById("edit-note");
+
+function openEditModal(task) {
+  editingTaskId = task.id;
+  editInput.value = task.title || "";
+  editNote.value = task.note || "";
+  editSelectedQ = task.quadrant;
+  document.querySelectorAll("#edit-q-grid .q-option").forEach(o => {
+    o.classList.toggle("selected", o.dataset.q === task.quadrant);
+  });
+  editModal.style.display = "flex";
+  setTimeout(() => editInput.focus(), 50);
+}
+function closeEditModal() { editModal.style.display = "none"; editingTaskId = null; }
+
+document.querySelectorAll("#edit-q-grid .q-option").forEach(opt => {
+  opt.addEventListener("click", () => {
+    editSelectedQ = opt.dataset.q;
+    document.querySelectorAll("#edit-q-grid .q-option").forEach(o => o.classList.remove("selected"));
+    opt.classList.add("selected");
+  });
+});
+document.getElementById("edit-modal-cancel").addEventListener("click", closeEditModal);
+editModal.addEventListener("click", e => { if (e.target === editModal) closeEditModal(); });
+document.getElementById("edit-modal-confirm").addEventListener("click", async () => {
+  const t = editInput.value.trim();
+  if (!t) { editInput.focus(); return; }
+  if (!editSelectedQ) { alert("請選擇象限"); return; }
+  const task = tasks.find(tk => tk.id === editingTaskId || String(tk.id) === String(editingTaskId));
+  if (!task) return;
+  await fsSet(currentUser.uid, "tasks", editingTaskId, { ...task, title: t, note: editNote.value.trim(), quadrant: editSelectedQ });
+  closeEditModal();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && editModal.style.display !== "none") closeEditModal(); });
+
 // ——— DRAG ———
 function onDragStart(e) { dragId = this.dataset.id; this.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; }
 function onDragEnd() { this.classList.remove("dragging"); document.querySelectorAll(".quadrant").forEach(q=>q.classList.remove("drag-over")); dragId=null; }
@@ -587,6 +676,8 @@ function openModal(prefill) {
   selectedQ = null; selectedRepeat = "none";
   document.querySelectorAll(".q-option").forEach(o => o.classList.remove("selected"));
   document.querySelectorAll(".repeat-opt").forEach(o => { o.classList.toggle("selected", o.dataset.repeat === "none"); });
+  document.getElementById("start-date-row").classList.remove("visible");
+  document.getElementById("modal-start-date").value = "";
   modal.style.display = "flex";
   setTimeout(() => modalInput.focus(), 50);
 }
@@ -603,6 +694,8 @@ document.querySelectorAll(".repeat-opt").forEach(opt => {
   opt.addEventListener("click", () => {
     selectedRepeat = opt.dataset.repeat;
     document.querySelectorAll(".repeat-opt").forEach(o => o.classList.toggle("selected", o.dataset.repeat === selectedRepeat));
+    const sdRow = document.getElementById("start-date-row");
+    sdRow.classList.toggle("visible", selectedRepeat !== "none");
   });
 });
 
@@ -614,7 +707,8 @@ document.getElementById("modal-confirm").addEventListener("click", async () => {
   const t = modalInput.value.trim();
   if (!t) { modalInput.focus(); return; }
   if (!selectedQ) { alert("請選擇象限"); return; }
-  await addTask(t, modalNote.value, selectedQ, selectedRepeat);
+  const startDate = document.getElementById("modal-start-date").value;
+  await addTask(t, modalNote.value, selectedQ, selectedRepeat, startDate);
   document.getElementById("quick-input").value = "";
   closeModal();
 });
