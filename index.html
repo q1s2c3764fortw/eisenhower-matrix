@@ -497,10 +497,8 @@ function createCard(task) {
       if (btn.dataset.action === "delete") deleteTask(task.id);
       return;
     }
-    // click on task body => edit
-    if (e.target.closest(".task-body") || e.target.closest(".task-text")) {
-      openEditModal(task);
-    }
+    // click anywhere on card (except action buttons) => edit
+    openEditModal(task);
   });
   return div;
 }
@@ -648,7 +646,11 @@ document.getElementById("edit-modal-confirm").addEventListener("click", async ()
   await fsSet(currentUser.uid, "tasks", editingTaskId, { ...task, title: t, note: editNote.value.trim(), quadrant: editSelectedQ });
   closeEditModal();
 });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && editModal.style.display !== "none") closeEditModal(); });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if (modal.style.display !== "none") closeModal();
+  if (editModal.style.display !== "none") closeEditModal();
+});
 
 // ——— DRAG ———
 function onDragStart(e) { dragId = this.dataset.id; this.classList.add("dragging"); e.dataTransfer.effectAllowed="move"; }
@@ -674,7 +676,7 @@ const modalNote = document.getElementById("modal-note");
 function openModal(prefill) {
   modalInput.value = prefill||""; modalNote.value = "";
   selectedQ = null; selectedRepeat = "none";
-  document.querySelectorAll(".q-option").forEach(o => o.classList.remove("selected"));
+  document.querySelectorAll("#modal .q-option").forEach(o => o.classList.remove("selected"));
   document.querySelectorAll(".repeat-opt").forEach(o => { o.classList.toggle("selected", o.dataset.repeat === "none"); });
   document.getElementById("start-date-row").classList.remove("visible");
   document.getElementById("modal-start-date").value = "";
@@ -683,10 +685,10 @@ function openModal(prefill) {
 }
 function closeModal() { modal.style.display = "none"; }
 
-document.querySelectorAll(".q-option").forEach(opt => {
+document.querySelectorAll("#modal .q-option").forEach(opt => {
   opt.addEventListener("click", () => {
     selectedQ = opt.dataset.q;
-    document.querySelectorAll(".q-option").forEach(o => o.classList.remove("selected"));
+    document.querySelectorAll("#modal .q-option").forEach(o => o.classList.remove("selected"));
     opt.classList.add("selected");
   });
 });
@@ -712,7 +714,7 @@ document.getElementById("modal-confirm").addEventListener("click", async () => {
   document.getElementById("quick-input").value = "";
   closeModal();
 });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && modal.style.display !== "none") closeModal(); });
+
 
 // ——— COMPLETED TOGGLE ———
 document.getElementById("completed-toggle").addEventListener("click", () => {
