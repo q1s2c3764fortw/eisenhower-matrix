@@ -82,7 +82,25 @@ input,textarea,select{font:inherit;color:inherit}
 
 .matrix-wrapper{flex:1;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4)}
 .matrix-with-axis{display:flex;gap:var(--space-2);flex:1}
-.axis-y{writing-mode:vertical-lr;transform:rotate(180deg);font-size:var(--text-xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-faint);display:flex;align-items:center;padding:var(--space-4) 0;user-select:none}
+.axis-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-text-faint);
+  padding: var(--space-4) 0;
+  user-select: none;
+  width: 20px;
+}
+
+.axis-y span {
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+}
 .matrix-content{flex:1;display:flex;flex-direction:column;gap:var(--space-2)}
 .axis-x-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);text-align:center}
 .axis-label{font-size:var(--text-xs);font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);user-select:none}
@@ -273,7 +291,10 @@ textarea.form-input{resize:vertical;min-height:72px}
 
   <div class="matrix-wrapper">
     <div class="matrix-with-axis">
-      <div class="axis-y" aria-hidden="true">↑ 緊急</div>
+      <div class="axis-y" aria-hidden="true">
+        <span>緊急</span>
+        <span>不緊急</span>
+      </div>
       <div class="matrix-content">
         <div class="axis-x-row" aria-hidden="true">
           <span class="axis-label">重要</span>
