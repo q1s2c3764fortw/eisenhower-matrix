@@ -31,42 +31,42 @@
   #google-btn img { width: 22px; }
 
   /* ─── HEADER ─── */
-  #app { display: none; flex-direction: column; height: 100vh; }
+  #app { display: none; flex-direction: column; min-height: 100vh; }
   header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 24px; background: var(--surface);
     border-bottom: 1px solid var(--border); flex-shrink: 0;
+    flex-wrap: wrap; gap: 8px;
   }
   header h1 { font-size: 1.3rem; }
-  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   #user-info { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--subtext); }
   #user-info img { width: 30px; border-radius: 50%; }
   #sign-out-btn, #add-task-btn, #show-completed-btn {
-    border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: .9rem; font-weight: 600;
+    border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: .88rem; font-weight: 600;
   }
   #sign-out-btn { background: var(--border); color: var(--text); }
   #add-task-btn { background: #4dabf7; color: #000; }
   #show-completed-btn { background: var(--border); color: var(--text); }
 
   /* ─── MATRIX ─── */
-  .matrix-wrapper { flex: 1; overflow: auto; padding: 16px; }
+  .matrix-wrapper { padding: 16px 16px 0; }
   .matrix {
     display: grid; grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr; gap: 12px;
-    min-height: calc(100vh - 90px);
   }
   .quadrant {
     background: var(--surface); border-radius: var(--radius);
     border: 2px solid var(--border); padding: 14px;
-    display: flex; flex-direction: column;
-    min-height: 280px; transition: border-color .2s;
+    display: flex; flex-direction: column; min-height: 260px;
+    transition: border-color .2s;
   }
   .quadrant.drag-over { border-color: #4dabf7; background: #0d2a4a; }
   .q1 { border-top: 4px solid var(--q1); }
   .q2 { border-top: 4px solid var(--q2); }
   .q3 { border-top: 4px solid var(--q3); }
   .q4 { border-top: 4px solid var(--q4); }
-  .quadrant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .quadrant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
   .quadrant-title { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
   .q1 .quadrant-title { color: var(--q1); }
   .q2 .quadrant-title { color: var(--q2); }
@@ -80,20 +80,40 @@
     background: var(--card); border-radius: 8px; padding: 10px 12px;
     cursor: grab; display: flex; align-items: flex-start; gap: 10px;
     border: 1px solid var(--border); transition: box-shadow .2s, opacity .2s;
-    user-select: none;
+    user-select: none; position: relative;
   }
   .task-card:active { cursor: grabbing; }
   .task-card.dragging { opacity: .4; }
-  .task-card.done { opacity: .5; }
   .task-card.done .task-title { text-decoration: line-through; color: var(--subtext); }
+
+  /* ─── CHECK + QUICK DELETE ─── */
+  .check-wrap { position: relative; flex-shrink: 0; margin-top: 2px; }
   .task-check {
-    width: 18px; height: 18px; border: 2px solid var(--subtext);
-    border-radius: 50%; cursor: pointer; flex-shrink: 0; margin-top: 2px;
+    width: 20px; height: 20px; border: 2px solid var(--subtext);
+    border-radius: 50%; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: background .15s, border-color .15s;
+    -webkit-touch-callout: none;
   }
+  .task-check:hover { border-color: #74c0fc; }
   .task-check.checked { background: #51cf66; border-color: #51cf66; }
-  .task-check.checked::after { content: '✓'; font-size: 11px; color: #000; }
+  .task-check.checked::after { content: '✓'; font-size: 11px; color: #000; font-weight: 800; }
+
+  /* quick-delete popup */
+  .quick-menu {
+    display: none; position: absolute; top: 24px; left: 0; z-index: 500;
+    background: #1e1e3a; border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; min-width: 110px;
+  }
+  .quick-menu.open { display: block; }
+  .quick-menu button {
+    display: block; width: 100%; background: none; border: none;
+    color: var(--text); padding: 9px 14px; cursor: pointer; font-size: .85rem;
+    text-align: left; transition: background .15s;
+  }
+  .quick-menu button:hover { background: rgba(255,255,255,.07); }
+  .quick-menu .qm-delete { color: #ff6b6b; }
+
   .task-body { flex: 1; min-width: 0; }
   .task-title { font-size: .9rem; word-break: break-word; }
   .task-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
@@ -108,6 +128,42 @@
     border-radius: 4px; transition: color .15s;
   }
   .task-edit-btn:hover { color: var(--text); }
+
+  /* ─── UPCOMING REPEATS SECTION ─── */
+  #upcoming-section {
+    margin: 16px; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--border); overflow: hidden;
+  }
+  #upcoming-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; cursor: pointer; user-select: none;
+    transition: background .15s;
+  }
+  #upcoming-toggle:hover { background: rgba(255,255,255,.04); }
+  #upcoming-toggle-left { display: flex; align-items: center; gap: 8px; }
+  #upcoming-toggle h3 { font-size: .9rem; font-weight: 600; }
+  #upcoming-count {
+    background: rgba(77,171,247,.2); color: #74c0fc;
+    font-size: .72rem; padding: 2px 9px; border-radius: 20px;
+  }
+  #upcoming-arrow { color: var(--subtext); font-size: .85rem; transition: transform .25s; }
+  #upcoming-arrow.open { transform: rotate(180deg); }
+  #upcoming-body { display: none; border-top: 1px solid var(--border); }
+  #upcoming-body.open { display: block; }
+  #upcoming-list { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+  .upcoming-item {
+    background: var(--card); border-radius: 8px; padding: 10px 14px;
+    border: 1px solid var(--border); display: flex; align-items: center; gap: 12px;
+  }
+  .upcoming-item .ui-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .upcoming-item .ui-body { flex: 1; min-width: 0; }
+  .upcoming-item .ui-title { font-size: .88rem; color: var(--text); }
+  .upcoming-item .ui-meta { font-size: .73rem; color: var(--subtext); margin-top: 3px; }
+  .upcoming-item .ui-start {
+    font-size: .75rem; color: #ffa94d; background: rgba(255,169,77,.12);
+    padding: 2px 9px; border-radius: 20px; flex-shrink: 0;
+  }
+  .upcoming-empty { padding: 16px; text-align: center; color: var(--subtext); font-size: .85rem; }
 
   /* ─── MODAL ─── */
   .modal-overlay {
@@ -133,7 +189,7 @@
   }
   .form-group textarea { resize: vertical; min-height: 70px; }
   #repeat-options { display: none; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
   .btn-cancel { background: var(--border); color: var(--text); border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; }
   .btn-save { background: #4dabf7; color: #000; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-weight: 700; }
   .btn-delete { background: #ff6b6b; color: #fff; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; }
@@ -162,8 +218,7 @@
   .completed-item .ci-meta { font-size: .72rem; color: var(--subtext); margin-top: 4px; }
   .restore-btn {
     background: none; border: 1px solid var(--subtext); color: var(--subtext);
-    border-radius: 6px; padding: 3px 9px; font-size: .75rem; cursor: pointer;
-    flex-shrink: 0;
+    border-radius: 6px; padding: 3px 9px; font-size: .75rem; cursor: pointer; flex-shrink: 0;
   }
   .restore-btn:hover { color: var(--text); border-color: var(--text); }
 
@@ -175,8 +230,11 @@
   }
   #toast.show { transform: translateX(-50%) translateY(0); }
 
+  /* ─── CUSTOM CONTEXT BLOCK ─── */
+  .no-ctx { -webkit-touch-callout: none; }
+
   @media (max-width: 640px) {
-    .matrix { grid-template-columns: 1fr; grid-template-rows: auto; }
+    .matrix { grid-template-columns: 1fr; }
     #completed-panel { width: 100%; }
   }
 </style>
@@ -211,33 +269,40 @@
   <div class="matrix-wrapper">
     <div class="matrix">
       <div class="quadrant q1" data-q="q1">
-        <div class="quadrant-header">
-          <span class="quadrant-title">第一象限</span>
-        </div>
+        <div class="quadrant-header"><span class="quadrant-title">第一象限</span></div>
         <div class="quadrant-subtitle">緊急 &amp; 重要 — 立即處理</div>
         <div class="task-list" id="list-q1"></div>
       </div>
       <div class="quadrant q2" data-q="q2">
-        <div class="quadrant-header">
-          <span class="quadrant-title">第二象限</span>
-        </div>
+        <div class="quadrant-header"><span class="quadrant-title">第二象限</span></div>
         <div class="quadrant-subtitle">不緊急 &amp; 重要 — 計劃執行</div>
         <div class="task-list" id="list-q2"></div>
       </div>
       <div class="quadrant q3" data-q="q3">
-        <div class="quadrant-header">
-          <span class="quadrant-title">第三象限</span>
-        </div>
+        <div class="quadrant-header"><span class="quadrant-title">第三象限</span></div>
         <div class="quadrant-subtitle">緊急 &amp; 不重要 — 委派他人</div>
         <div class="task-list" id="list-q3"></div>
       </div>
       <div class="quadrant q4" data-q="q4">
-        <div class="quadrant-header">
-          <span class="quadrant-title">第四象限</span>
-        </div>
+        <div class="quadrant-header"><span class="quadrant-title">第四象限</span></div>
         <div class="quadrant-subtitle">不緊急 &amp; 不重要 — 考慮刪除</div>
         <div class="task-list" id="list-q4"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- UPCOMING REPEATS -->
+  <div id="upcoming-section">
+    <div id="upcoming-toggle">
+      <div id="upcoming-toggle-left">
+        <span>🔁</span>
+        <h3>預計重複任務</h3>
+        <span id="upcoming-count">0</span>
+      </div>
+      <span id="upcoming-arrow">▼</span>
+    </div>
+    <div id="upcoming-body">
+      <div id="upcoming-list"></div>
     </div>
   </div>
 </div>
@@ -331,12 +396,30 @@ let tasks = [];
 let unsubscribe = null;
 let dragSrcId = null;
 let editingTaskId = null;
+let activeQuickMenu = null; // currently open quick-menu DOM node
 
-// ─── Auth UI ─────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────
+const TODAY = (() => {
+  const d = new Date(); d.setHours(0,0,0,0); return d;
+})();
+const todayStr = TODAY.toISOString().split('T')[0];
+
+function isRepeatStartPending(t) {
+  // Returns true if repeatStart is set and is strictly in the future
+  if (!t.repeatStart) return false;
+  return t.repeatStart > todayStr;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+const qLabels = { q1: 'Q1 緊急&重要', q2: 'Q2 不緊急&重要', q3: 'Q3 緊急&不重要', q4: 'Q4 不緊急&不重要' };
+const repeatLabels = { daily: '每日', weekly: '每週', monthly: '每月' };
+
+// ─── Auth ────────────────────────────────────────────────────
 const authScreen = document.getElementById('auth-screen');
 const appEl = document.getElementById('app');
-const userAvatar = document.getElementById('user-avatar');
-const userName = document.getElementById('user-name');
 
 document.getElementById('google-btn').addEventListener('click', () => {
   signInWithPopup(auth, new GoogleAuthProvider()).catch(e => showToast('登入失敗：' + e.message));
@@ -348,10 +431,10 @@ onAuthStateChanged(auth, user => {
   if (user) {
     authScreen.style.display = 'none';
     appEl.style.display = 'flex';
-    userAvatar.src = user.photoURL || '';
-    userName.textContent = user.displayName || user.email;
+    appEl.style.flexDirection = 'column';
+    document.getElementById('user-avatar').src = user.photoURL || '';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
     subscribeToTasks();
-    scheduleRepeatCheck();
   } else {
     authScreen.style.display = 'flex';
     appEl.style.display = 'none';
@@ -361,7 +444,7 @@ onAuthStateChanged(auth, user => {
   }
 });
 
-// ─── Firestore Subscription ──────────────────────────────────
+// ─── Firestore ───────────────────────────────────────────────
 function subscribeToTasks() {
   if (unsubscribe) unsubscribe();
   const q = query(collection(db, 'tasks'), where('uid', '==', currentUser.uid));
@@ -372,29 +455,74 @@ function subscribeToTasks() {
 }
 
 // ─── Render ──────────────────────────────────────────────────
-const qLabels = { q1: 'Q1', q2: 'Q2', q3: 'Q3', q4: 'Q4' };
-const repeatLabels = { daily: '每日', weekly: '每週', monthly: '每月' };
-
 function renderAll() {
   ['q1','q2','q3','q4'].forEach(q => {
     const el = document.getElementById('list-' + q);
-    const active = tasks.filter(t => t.quadrant === q && !t.done);
+    // Filter: not done, not pending repeatStart
+    const active = tasks.filter(t =>
+      t.quadrant === q && !t.done && !isRepeatStartPending(t)
+    );
     el.innerHTML = '';
     active.forEach(t => el.appendChild(createCard(t)));
   });
   renderCompleted();
+  renderUpcoming();
 }
 
 function createCard(t) {
   const div = document.createElement('div');
-  div.className = 'task-card' + (t.done ? ' done' : '');
+  div.className = 'task-card';
   div.setAttribute('draggable', 'true');
   div.dataset.id = t.id;
 
+  // ── Check wrap + quick-delete menu ──
+  const checkWrap = document.createElement('div');
+  checkWrap.className = 'check-wrap no-ctx';
+
   const check = document.createElement('div');
   check.className = 'task-check' + (t.done ? ' checked' : '');
-  check.addEventListener('click', e => { e.stopPropagation(); toggleDone(t); });
 
+  const qMenu = document.createElement('div');
+  qMenu.className = 'quick-menu';
+  qMenu.innerHTML = `
+    <button class="qm-done">✅ 完成任務</button>
+    <button class="qm-delete">🗑️ 刪除任務</button>
+  `;
+  qMenu.querySelector('.qm-done').addEventListener('click', e => {
+    e.stopPropagation(); closeAllMenus(); toggleDone(t);
+  });
+  qMenu.querySelector('.qm-delete').addEventListener('click', e => {
+    e.stopPropagation(); closeAllMenus(); confirmDelete(t.id, t.title);
+  });
+
+  // Left-click: toggle done
+  check.addEventListener('click', e => {
+    e.stopPropagation();
+    closeAllMenus();
+    toggleDone(t);
+  });
+
+  // Right-click / long-press: open quick menu
+  check.addEventListener('contextmenu', e => {
+    e.preventDefault(); e.stopPropagation();
+    openQuickMenu(qMenu);
+  });
+
+  // Long press for mobile
+  let longPressTimer;
+  check.addEventListener('touchstart', e => {
+    longPressTimer = setTimeout(() => {
+      e.preventDefault();
+      openQuickMenu(qMenu);
+    }, 500);
+  }, { passive: true });
+  check.addEventListener('touchend', () => clearTimeout(longPressTimer));
+  check.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
+  checkWrap.appendChild(check);
+  checkWrap.appendChild(qMenu);
+
+  // ── Body ──
   const body = document.createElement('div');
   body.className = 'task-body';
 
@@ -418,54 +546,87 @@ function createCard(t) {
   }
   if (t.note) {
     const b = document.createElement('span');
-    b.className = 'badge';
-    b.textContent = '📝';
+    b.className = 'badge'; b.textContent = '📝';
     meta.appendChild(b);
   }
   body.appendChild(title);
   body.appendChild(meta);
 
+  // ── Edit btn ──
   const editBtn = document.createElement('button');
   editBtn.className = 'task-edit-btn';
   editBtn.textContent = '✏️';
   editBtn.title = '編輯';
   editBtn.addEventListener('click', e => { e.stopPropagation(); openEditModal(t); });
 
-  div.appendChild(check);
+  div.appendChild(checkWrap);
   div.appendChild(body);
   div.appendChild(editBtn);
 
-  // Click card to edit
-  div.addEventListener('click', () => openEditModal(t));
-
-  // Drag events
+  div.addEventListener('click', () => { closeAllMenus(); openEditModal(t); });
   div.addEventListener('dragstart', onDragStart);
   div.addEventListener('dragend', onDragEnd);
 
   return div;
 }
 
-function renderCompleted() {
-  const el = document.getElementById('completed-list');
-  const done = tasks.filter(t => t.done).sort((a,b) => (b.completedAt||0) - (a.completedAt||0));
-  el.innerHTML = '';
-  if (!done.length) {
-    el.innerHTML = '<p style="color:var(--subtext);font-size:.85rem;text-align:center;padding:20px">尚無已完成任務</p>';
+// ─── Quick Menu Helpers ──────────────────────────────────────
+function openQuickMenu(menuEl) {
+  closeAllMenus();
+  menuEl.classList.add('open');
+  activeQuickMenu = menuEl;
+}
+function closeAllMenus() {
+  if (activeQuickMenu) { activeQuickMenu.classList.remove('open'); activeQuickMenu = null; }
+}
+document.addEventListener('click', closeAllMenus);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAllMenus(); });
+
+// ─── Upcoming Repeats ────────────────────────────────────────
+const upcomingToggle = document.getElementById('upcoming-toggle');
+const upcomingBody = document.getElementById('upcoming-body');
+const upcomingArrow = document.getElementById('upcoming-arrow');
+const upcomingList = document.getElementById('upcoming-list');
+const upcomingCount = document.getElementById('upcoming-count');
+
+upcomingToggle.addEventListener('click', () => {
+  const open = upcomingBody.classList.toggle('open');
+  upcomingArrow.classList.toggle('open', open);
+});
+
+function renderUpcoming() {
+  // Tasks with repeat set and repeatStart still in the future
+  const pending = tasks.filter(t =>
+    !t.done && t.repeat && t.repeat !== 'none' && isRepeatStartPending(t)
+  ).sort((a, b) => (a.repeatStart || '').localeCompare(b.repeatStart || ''));
+
+  upcomingCount.textContent = pending.length;
+
+  if (!pending.length) {
+    upcomingList.innerHTML = '<div class="upcoming-empty">目前沒有待開始的重複任務</div>';
     return;
   }
-  done.forEach(t => {
+  upcomingList.innerHTML = '';
+  pending.forEach(t => {
     const item = document.createElement('div');
-    item.className = 'completed-item';
-    const dateStr = t.completedAt ? new Date(t.completedAt).toLocaleDateString('zh-TW') : '';
+    item.className = 'upcoming-item';
+
+    const icon = { daily: '📆', weekly: '🗓️', monthly: '📅' }[t.repeat] || '🔁';
+    const daysUntil = Math.ceil((new Date(t.repeatStart) - TODAY) / 86400000);
+    const daysLabel = daysUntil === 1 ? '明天開始' : `${daysUntil} 天後開始`;
+
     item.innerHTML = `
-      <div class="ci-body">
-        <div class="ci-title">${escHtml(t.title)}</div>
-        <div class="ci-meta">${qLabels[t.quadrant] || ''} ${dateStr ? '· 完成於 ' + dateStr : ''}</div>
+      <span class="ui-icon">${icon}</span>
+      <div class="ui-body">
+        <div class="ui-title">${escHtml(t.title)}</div>
+        <div class="ui-meta">${qLabels[t.quadrant] || ''} · ${repeatLabels[t.repeat]} · 起始 ${escHtml(t.repeatStart)}</div>
       </div>
-      <button class="restore-btn" data-id="${t.id}">還原</button>
+      <span class="ui-start">${daysLabel}</span>
     `;
-    item.querySelector('.restore-btn').addEventListener('click', () => restoreTask(t.id));
-    el.appendChild(item);
+    // Click to edit
+    item.style.cursor = 'pointer';
+    item.addEventListener('click', () => openEditModal(t));
+    upcomingList.appendChild(item);
   });
 }
 
@@ -489,7 +650,7 @@ async function onDrop(e) {
   document.querySelectorAll('.quadrant').forEach(q => q.classList.remove('drag-over'));
   if (!dragSrcId || !quadrant) return;
   await updateDoc(doc(db, 'tasks', dragSrcId), { quadrant });
-  showToast('任務已移動至 ' + qLabels[quadrant]);
+  showToast('任務移至 ' + (qLabels[quadrant] || quadrant));
   dragSrcId = null;
 }
 
@@ -497,14 +658,13 @@ async function onDrop(e) {
 async function toggleDone(t) {
   if (!t.done) {
     await updateDoc(doc(db, 'tasks', t.id), { done: true, completedAt: Date.now() });
-    // Handle repeat: create next occurrence
     if (t.repeat && t.repeat !== 'none') {
       const nextDue = calcNextRepeat(t);
       if (nextDue) {
         await addDoc(collection(db, 'tasks'), {
           uid: currentUser.uid, title: t.title, note: t.note || '',
           quadrant: t.quadrant, due: nextDue,
-          repeat: t.repeat, repeatStart: t.repeatStart || '',
+          repeat: t.repeat, repeatStart: nextDue,
           done: false, completedAt: null,
           createdAt: serverTimestamp()
         });
@@ -513,6 +673,7 @@ async function toggleDone(t) {
     showToast('✅ 任務完成！');
   } else {
     await updateDoc(doc(db, 'tasks', t.id), { done: false, completedAt: null });
+    showToast('任務已還原');
   }
 }
 
@@ -525,14 +686,48 @@ function calcNextRepeat(t) {
   return base.toISOString().split('T')[0];
 }
 
-function scheduleRepeatCheck() {
-  // On load: ensure today's repeating tasks exist (by due date)
-  // Light check — avoids duplicates by not auto-generating unless user marks done
+async function confirmDelete(id, title) {
+  if (!confirm(`確定刪除「${title}」？`)) return;
+  await deleteDoc(doc(db, 'tasks', id));
+  showToast('任務已刪除');
 }
 
 async function restoreTask(id) {
   await updateDoc(doc(db, 'tasks', id), { done: false, completedAt: null });
   showToast('任務已還原');
+}
+
+// ─── Completed Panel ─────────────────────────────────────────
+const completedPanel = document.getElementById('completed-panel');
+document.getElementById('show-completed-btn').addEventListener('click', () => {
+  completedPanel.classList.toggle('open');
+});
+document.getElementById('close-panel').addEventListener('click', () => {
+  completedPanel.classList.remove('open');
+});
+
+function renderCompleted() {
+  const el = document.getElementById('completed-list');
+  const done = tasks.filter(t => t.done).sort((a,b) => (b.completedAt||0) - (a.completedAt||0));
+  el.innerHTML = '';
+  if (!done.length) {
+    el.innerHTML = '<p style="color:var(--subtext);font-size:.85rem;text-align:center;padding:20px">尚無已完成任務</p>';
+    return;
+  }
+  done.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'completed-item';
+    const dateStr = t.completedAt ? new Date(t.completedAt).toLocaleDateString('zh-TW') : '';
+    item.innerHTML = `
+      <div class="ci-body">
+        <div class="ci-title">${escHtml(t.title)}</div>
+        <div class="ci-meta">${(qLabels[t.quadrant]||'')} ${dateStr ? '· ' + dateStr : ''}</div>
+      </div>
+      <button class="restore-btn" data-id="${t.id}">還原</button>
+    `;
+    item.querySelector('.restore-btn').addEventListener('click', () => restoreTask(t.id));
+    el.appendChild(item);
+  });
 }
 
 // ─── Modal ───────────────────────────────────────────────────
@@ -549,9 +744,10 @@ const deleteBtn = document.getElementById('modal-delete-btn');
 document.getElementById('add-task-btn').addEventListener('click', () => openAddModal());
 document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
 document.getElementById('modal-save-btn').addEventListener('click', saveTask);
-deleteBtn.addEventListener('click', deleteTask);
+deleteBtn.addEventListener('click', () => {
+  if (editingTaskId) confirmDelete(editingTaskId, fTitle.value).then(closeModal);
+});
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-
 fRepeat.addEventListener('change', () => {
   repeatOptions.style.display = fRepeat.value !== 'none' ? 'block' : 'none';
 });
@@ -560,13 +756,12 @@ function openAddModal(quadrant = 'q1') {
   editingTaskId = null;
   document.getElementById('modal-title').textContent = '新增任務';
   fTitle.value = ''; fNote.value = '';
-  fQuadrant.value = quadrant;
-  fDue.value = ''; fRepeat.value = 'none';
-  fRepeatStart.value = '';
+  fQuadrant.value = quadrant; fDue.value = '';
+  fRepeat.value = 'none'; fRepeatStart.value = '';
   repeatOptions.style.display = 'none';
   deleteBtn.style.display = 'none';
   modal.classList.add('open');
-  fTitle.focus();
+  setTimeout(() => fTitle.focus(), 50);
 }
 
 function openEditModal(t) {
@@ -581,7 +776,7 @@ function openEditModal(t) {
   repeatOptions.style.display = (t.repeat && t.repeat !== 'none') ? 'block' : 'none';
   deleteBtn.style.display = 'inline-block';
   modal.classList.add('open');
-  fTitle.focus();
+  setTimeout(() => fTitle.focus(), 50);
 }
 
 function closeModal() { modal.classList.remove('open'); editingTaskId = null; }
@@ -611,23 +806,6 @@ async function saveTask() {
   closeModal();
 }
 
-async function deleteTask() {
-  if (!editingTaskId) return;
-  if (!confirm('確定要刪除這個任務？')) return;
-  await deleteDoc(doc(db, 'tasks', editingTaskId));
-  showToast('任務已刪除');
-  closeModal();
-}
-
-// ─── Completed Panel ─────────────────────────────────────────
-const completedPanel = document.getElementById('completed-panel');
-document.getElementById('show-completed-btn').addEventListener('click', () => {
-  completedPanel.classList.toggle('open');
-});
-document.getElementById('close-panel').addEventListener('click', () => {
-  completedPanel.classList.remove('open');
-});
-
 // ─── Toast ───────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg) {
@@ -635,11 +813,6 @@ function showToast(msg) {
   t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
-}
-
-// ─── Utils ───────────────────────────────────────────────────
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 </body>
